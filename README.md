@@ -6,9 +6,8 @@ libimagequant-java is kept intentionally simple, only operating on `byte[]` arra
 The required native shared library is automatically loaded for your operating system. No messing around with `-Djava.library.path`. libimagequant-java supports Windows 32- & 64-bit, Linux 32- & 64-bit as well as macOS out of the box.
 
 ## Installation
-本项目修改了JNI代码，并使用pngquant原来的JNI接口，且梳理了编译流程，如需使用自行编译即可。
-如果想直接使用libimagequant-java原始库，可通过以下方式添加依赖：
-libimagequant-java is published to Maven Central. You can include it in your `pom.xml` as a dependency as follows:
+本项目修改了JNI代码，并使用pngquant原来的JNI接口，且梳理了编译流程，如需使用自行编译即可.
+如果想直接使用libimagequant-java原始库，可通过以下方式添加依赖:
 
 ```xml
 <dependency>
