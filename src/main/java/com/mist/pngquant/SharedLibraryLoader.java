@@ -1,5 +1,5 @@
 
-package com.badlogicgames.libimagequant;
+package com.mist.pngquant;
 
 import java.io.Closeable;
 import java.io.File;

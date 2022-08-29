@@ -6,20 +6,26 @@ libimagequant-java is kept intentionally simple, only operating on `byte[]` arra
 The required native shared library is automatically loaded for your operating system. No messing around with `-Djava.library.path`. libimagequant-java supports Windows 32- & 64-bit, Linux 32- & 64-bit as well as macOS out of the box.
 
 ## Installation
+本项目修改了JNI代码，并使用pngquant原来的JNI接口，且梳理了编译流程，如需使用自行编译即可。
+如果想直接使用libimagequant-java原始库，可通过以下方式添加依赖：
 libimagequant-java is published to Maven Central. You can include it in your `pom.xml` as a dependency as follows:
 
 ```xml
 <dependency>
 	<groupId>com.badlogicgames</groupId>
 	<artifactId>libimagequant-java</artifactId>
-	<version>1.0</version>
+	<version>1.2-SNAPSHOT</version>
 </dependency>
 ```
 
-To include it in your Gradle project, ensure your `build.gradle` file adds the `mavenCentral()` repository. Then add the dependency:
+To include it in your Gradle project, ensure your `build.gradle` file adds thd repository:
 
+```
+maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+```
+Then add the dependency:
 ```groovy
-compile "com.badlogicgames:libimagequant-java:1.0"
+compile "com.badlogicgames:libimagequant-java:1.2-SNAPSHOT"
 ```
 
 libimagequant-java is also built on every new commit by [Jenkins](https://libgdx.badlogicgames.com/jenkins/job/libimagequant-java/) and published as a [SNAPSHOT release](https://oss.sonatype.org/content/repositories/snapshots/com/badlogicgames/libimagequant-java/) to SonaType.
@@ -30,53 +36,12 @@ The below code loads a 32-bit RGBA PNG file, quantizes it to 8-bit and then writ
 ```java
 new SharedLibraryLoader().load("imagequant-java");
 
-// Read the input image.
-BufferedImage input = ImageIO.read(LibImageQuantTest.class.getResourceAsStream("/input.png"));
-byte[] pixels = ((DataBufferByte)input.getRaster().getDataBuffer()).getData();
+PngQuant pngQuant = new PngQuant();
+pngQuant.setQuality(10);
+BufferedImage image = ImageIO.read(new File("test/origin.png"));
 
-// ABGR -> RGBA.
-for (int i = 0; i < pixels.length; i += 4) {
-	byte a = pixels[i];
-	byte b = pixels[i + 1];
-	byte g = pixels[i + 2];
-	byte r = pixels[i + 3];
-	pixels[i] = r;
-	pixels[i + 1] = g;
-	pixels[i + 2] = b;
-	pixels[i + 3] = a;
-}
-
-// Setup libimagequant and quantize the image.
-LiqAttribute attribute = new LiqAttribute();
-LiqImage image = new LiqImage(attribute, pixels, input.getWidth(), input.getHeight(), 0);
-LiqResult result = image.quantize();
-
-// Based on the quantization result, generate an 8-bit indexed image and retrieve its palette.
-byte[] quantizedPixels = new byte[input.getWidth() * input.getHeight()];
-image.remap(result, quantizedPixels);
-LiqPalette palette = result.getPalette();
-
-// The resulting 8-bit indexed image and palette could be written out to an indexed PNG or GIF, but instead we convert it
-// back to 32-bit RGBA.
-BufferedImage convertedImage = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-byte[] convertedPixels = ((DataBufferByte)convertedImage.getRaster().getDataBuffer()).getData();
-int size = input.getWidth() * input.getHeight();
-for (int i = 0, j = 0; i < size; i++, j += 4) {
-	int index = quantizedPixels[i] & 0xff; // Java's byte is signed
-	int color = palette.getColor(index);
-	convertedPixels[j] = LiqPalette.getA(color);
-	convertedPixels[j + 1] = LiqPalette.getB(color);
-	convertedPixels[j + 2] = LiqPalette.getG(color);
-	convertedPixels[j + 3] = LiqPalette.getR(color);
-}
-
-ImageIO.write(convertedImage, "png", new File("output.png"));
-
-// Good practice to immediately destroy the native resources but not necessary. If the GC cleans up the Java side object the
-// native side will be destroyed as well.
-result.destroy();
-image.destroy();
-attribute.destroy();
+BufferedImage remapped = pngQuant.getRemapped(image);
+ImageIO.write(remapped, "png", new File("test/1.png "));
 ```
 
 Refer to the [libimagequant documentation](https://pngquant.org/lib/) for more information.
@@ -99,9 +64,11 @@ from a terminal. This will download the latest native shared libraries from [Jen
 ### Building the native libraries
 To build the native shared libraries yourself, you can use the included `jni/build-docker.sh` script for Windows 32-bit, Windows 64-bit, Linux 32-bit and Linux 64-bit. Install [Docker CE](https://www.docker.com/community-edition), then in your terminal:
 
+使用Mac OS编译，安装工具：XCode、Command Line Tools、MinGW-w64、Docker；
+
 ```bash
 cd jni/
-./build-docker.sh
+./build-all.sh
 ```
 
 This will build a Docker image with all required toolchains for Windows and Linux, compile the libimagequant-java shared libraries and put them in `src/main/resources`.

@@ -1,5 +1,5 @@
 
-package com.badlogicgames.libimagequant;
+package com.mist.pngquant;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,11 +12,11 @@ import com.badlogic.gdx.jnigen.FileDescriptor;
 import com.badlogic.gdx.jnigen.NativeCodeGenerator;
 
 public class CodeGenerator {
+	
 	public static void main (String[] args) throws Exception {
 		NativeCodeGenerator generator = new NativeCodeGenerator();
 		generator.generate("src/main/java", "target/classes", "jni/src", new String[] {"**/*.java"}, null);
-
-		startProcess("./build.sh --target=macosx", new File("jni"));
+//		startProcess("./build.sh --target=macosx", new File("jni"));
 	}
 
 	private static boolean startProcess (String command, final File directory) {
